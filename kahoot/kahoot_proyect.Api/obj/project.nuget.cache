@@ -1,0 +1,11 @@
+{
+  "version": 2,
+  "dgSpecHash": "Zm9L9i4ZXhI=",
+  "success": true,
+  "projectFilePath": "D:\\download\\Codigos\\Daniel_codes\\kahoot\\kahoot_proyect.Api\\kahoot_proyect.Api.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\jesus\\.nuget\\packages\\microsoft.aspnetcore.openapi\\10.0.11\\microsoft.aspnetcore.openapi.10.0.11.nupkg.sha512",
+    "C:\\Users\\jesus\\.nuget\\packages\\microsoft.openapi\\2.7.5\\microsoft.openapi.2.7.5.nupkg.sha512"
+  ],
+  "logs": []
+}
