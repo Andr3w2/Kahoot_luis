@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\download\\Codigos\\Daniel_codes\\kahoot\\kahoot_proyect.Api\\kahoot_proyect.Api.csproj": {}
+    "D:\\Luis_program\\Kahoot_luis\\kahoot\\kahoot_proyect.Api\\kahoot_proyect.Api.csproj": {}
   },
   "projects": {
-    "D:\\download\\Codigos\\Daniel_codes\\kahoot\\kahoot_proyect.Api\\kahoot_proyect.Api.csproj": {
+    "D:\\Luis_program\\Kahoot_luis\\kahoot\\kahoot_proyect.Api\\kahoot_proyect.Api.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\download\\Codigos\\Daniel_codes\\kahoot\\kahoot_proyect.Api\\kahoot_proyect.Api.csproj",
+        "projectUniqueName": "D:\\Luis_program\\Kahoot_luis\\kahoot\\kahoot_proyect.Api\\kahoot_proyect.Api.csproj",
         "projectName": "kahoot_proyect.Api",
-        "projectPath": "D:\\download\\Codigos\\Daniel_codes\\kahoot\\kahoot_proyect.Api\\kahoot_proyect.Api.csproj",
-        "packagesPath": "C:\\Users\\jesus\\.nuget\\packages\\",
-        "outputPath": "D:\\download\\Codigos\\Daniel_codes\\kahoot\\kahoot_proyect.Api\\obj\\",
+        "projectPath": "D:\\Luis_program\\Kahoot_luis\\kahoot\\kahoot_proyect.Api\\kahoot_proyect.Api.csproj",
+        "packagesPath": "D:\\NuGetPackages",
+        "outputPath": "D:\\Luis_program\\Kahoot_luis\\kahoot\\kahoot_proyect.Api\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -53,9 +53,19 @@
           "framework": "net10.0",
           "targetAlias": "net10.0",
           "dependencies": {
-            "Microsoft.AspNetCore.OpenApi": {
+            "Microsoft.EntityFrameworkCore.Design": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
               "target": "Package",
-              "version": "[10.0.11, )"
+              "version": "[10.0.0, )"
+            },
+            "Microsoft.EntityFrameworkCore.Sqlite": {
+              "target": "Package",
+              "version": "[10.0.0, )"
+            },
+            "Swashbuckle.AspNetCore": {
+              "target": "Package",
+              "version": "[11.0.1, )"
             }
           },
           "imports": [

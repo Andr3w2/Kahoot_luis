@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("kahoot_proyect.Api")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+d197c1b6ba554010dce67999854cf157d9ff8559")]
 [assembly: System.Reflection.AssemblyProductAttribute("kahoot_proyect.Api")]
 [assembly: System.Reflection.AssemblyTitleAttribute("kahoot_proyect.Api")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
