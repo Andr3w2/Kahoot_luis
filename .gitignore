@@ -1,0 +1,2 @@
+dotnet new gitignore
+Add-Content .gitignore "`n*.db`n*.db-shm`n*.db-wal"
