@@ -1,2 +1,15 @@
-dotnet new gitignore
-Add-Content .gitignore "`n*.db`n*.db-shm`n*.db-wal"
+# .NET y Visual Studio
+bin/
+obj/
+.vs/
+*.user
+
+# Base de datos SQLite local
+*.db
+*.db-shm
+*.db-wal
+
+# Flutter y Dart
+.dart_tool/
+.packages
+build/
