@@ -31,7 +31,7 @@ class _SalaEsperaScreenState extends State<SalaEsperaScreen> {
   Timer? _countdownTimer;
   List<dynamic> _participantes = [];
   bool _iniciando = false;
-  int _segundosEspera = 30;
+  int _segundosEspera = 360;
 
   @override
   void initState() {
@@ -41,7 +41,6 @@ class _SalaEsperaScreenState extends State<SalaEsperaScreen> {
 
   Future<void> _prepararSala() async {
     if (widget.esMaestro) {
-      // Reinicia el estado a "Esperando" y limpia registros viejos de la sala
       await ApiService.cambiarEstadoCuestionario(
         widget.idCuestionario,
         'Esperando',
@@ -51,21 +50,22 @@ class _SalaEsperaScreenState extends State<SalaEsperaScreen> {
 
     await _sincronizarSala();
 
-    // Sincroniza lista de alumnos cada 2 segundos
+    // Sincroniza lista de alumnos y estado cada 2 segundos
     _pollingTimer = Timer.periodic(
       const Duration(seconds: 2),
       (_) => _sincronizarSala(),
     );
 
-    // Temporizador de 30 segundos de espera
+    // Temporizador de respaldo de 30 segundos
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) return;
       if (_segundosEspera > 0) {
         setState(() => _segundosEspera--);
       } else {
         timer.cancel();
-        if (!widget.esMaestro) {
-          _irAJuego();
+        // Si se agotan los 30s, el maestro inicia la sala automáticamente para todos
+        if (widget.esMaestro && !_iniciando) {
+          _iniciarPartidaMaestro();
         }
       }
     });
@@ -82,8 +82,8 @@ class _SalaEsperaScreenState extends State<SalaEsperaScreen> {
           widget.idCuestionario,
         );
         final estado = (cuestionario?['estado'] ?? '').toString().toLowerCase();
-        // Solo arranca si el maestro presionó Iniciar Y ya pasaron los 30s
-        if (estado == 'iniciado' && _segundosEspera == 0) {
+        // MODIFICADO: Arranca de inmediato en cuanto el maestro inicia la sala
+        if (estado == 'iniciado') {
           _irAJuego();
         }
       }
@@ -107,6 +107,7 @@ class _SalaEsperaScreenState extends State<SalaEsperaScreen> {
   }
 
   Future<void> _iniciarPartidaMaestro() async {
+    if (_iniciando) return;
     setState(() => _iniciando = true);
     final ok = await ApiService.cambiarEstadoCuestionario(
       widget.idCuestionario,
@@ -145,7 +146,6 @@ class _SalaEsperaScreenState extends State<SalaEsperaScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // AGREGADO: PopScope intercepta cuando el usuario presiona "Atrás" en esta pantalla
     return PopScope(
       onPopInvokedWithResult: (didPop, result) async {
         if (didPop && widget.esMaestro) {
@@ -226,7 +226,7 @@ class _SalaEsperaScreenState extends State<SalaEsperaScreen> {
                   Chip(
                     backgroundColor: Colors.amber,
                     label: Text(
-                      'Inicio en: ${_segundosEspera}s',
+                      'Inicio auto: ${_segundosEspera}s',
                       style: const TextStyle(
                         fontWeight: FontWeight.w900,
                         color: Colors.black87,
@@ -326,10 +326,10 @@ class _SalaEsperaScreenState extends State<SalaEsperaScreen> {
                     color: Colors.black26,
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Row(
+                  child: const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const SizedBox(
+                      SizedBox(
                         width: 20,
                         height: 20,
                         child: CircularProgressIndicator(
@@ -337,15 +337,10 @@ class _SalaEsperaScreenState extends State<SalaEsperaScreen> {
                           strokeWidth: 2.5,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      SizedBox(width: 12),
                       Text(
-                        _segundosEspera > 0
-                            ? 'Preparando partida (${_segundosEspera}s)...'
-                            : 'Esperando a que el maestro inicie...',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                        ),
+                        'Esperando a que el maestro inicie...',
+                        style: TextStyle(color: Colors.white, fontSize: 15),
                       ),
                     ],
                   ),
