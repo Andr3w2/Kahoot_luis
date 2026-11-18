@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 
 import '../services/api_service.dart';
+import 'juego_screen.dart';
 
 class IngresoCodigoScreen extends StatefulWidget {
-  const IngresoCodigoScreen({super.key});
+  final int idUsuario;
+  final String nombreAlumno;
+
+  const IngresoCodigoScreen({
+    super.key,
+    this.idUsuario = 2,
+    this.nombreAlumno = 'Alumno',
+  });
 
   @override
   State<IngresoCodigoScreen> createState() => _IngresoCodigoScreenState();
@@ -24,7 +32,6 @@ class _IngresoCodigoScreenState extends State<IngresoCodigoScreen> {
     setState(() => _cargando = true);
 
     try {
-      // 1. Buscar el cuestionario en la API .NET
       final cuestionario = await ApiService.buscarCuestionarioPorCodigo(codigo);
 
       if (cuestionario == null) {
@@ -37,9 +44,8 @@ class _IngresoCodigoScreenState extends State<IngresoCodigoScreen> {
       final int idCuestionario = cuestionario['idCuestionario'];
       final String titulo = cuestionario['titulo'] ?? 'Cuestionario';
 
-      // 2. Registrar participación (usando idUsuario: 2 de tu prueba en Swagger)
       final participacion = await ApiService.iniciarParticipacion(
-        2,
+        widget.idUsuario,
         idCuestionario,
       );
 
@@ -50,33 +56,18 @@ class _IngresoCodigoScreenState extends State<IngresoCodigoScreen> {
 
       if (!mounted) return;
 
-      // Confirmación visual de conexión exitosa con SQLite
-      showDialog(
-        context: context,
-        builder: (_) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => JuegoScreen(
+            idCuestionario: idCuestionario,
+            idParticipacion: participacion['idParticipacion'],
+            tituloSala: titulo,
           ),
-          title: const Text('¡Listo para jugar!', textAlign: TextAlign.center),
-          content: Text(
-            'Sala: $titulo\nID Participación: ${participacion['idParticipacion']}',
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 16),
-          ),
-          actions: [
-            Center(
-              child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Continuar'),
-              ),
-            ),
-          ],
         ),
       );
     } catch (e) {
-      _mostrarMensaje(
-        'Error de conexión con el servidor. Verifica que la API esté corriendo.',
-      );
+      _mostrarMensaje('Error de conexión: $e');
     } finally {
       if (mounted) setState(() => _cargando = false);
     }
@@ -98,7 +89,13 @@ class _IngresoCodigoScreenState extends State<IngresoCodigoScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF46178F), // Morado estilo Kahoot
+      backgroundColor: const Color(0xFF46178F),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        title: Text('Hola, ${widget.nombreAlumno}'),
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(

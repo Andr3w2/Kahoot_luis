@@ -12,6 +12,37 @@ class ApiService {
     return 'http://127.0.0.1:5062/api';
   }
 
+  // Registrar usuario (Alumno o Maestro)
+  static Future<Map<String, dynamic>?> registrarUsuario({
+    required String nombre,
+    required String correo,
+    required String rol,
+  }) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/Usuarios'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'nombre': nombre,
+        'correo': correo,
+        'contrasena': '123',
+        'rol': rol,
+      }),
+    );
+    if (response.statusCode == 201 || response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    }
+    return null;
+  }
+
+  // Obtener lista de cuestionarios (para el panel del Maestro)
+  static Future<List<dynamic>> obtenerCuestionarios() async {
+    final response = await http.get(Uri.parse('$baseUrl/Cuestionarios'));
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as List<dynamic>;
+    }
+    return [];
+  }
+
   // Validar código de acceso de sala
   static Future<Map<String, dynamic>?> buscarCuestionarioPorCodigo(
     String codigo,

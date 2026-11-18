@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'screens/ingreso_codigo_screen.dart';
+import 'screens/splash_screen.dart';
 
 void main() {
   runApp(const JabsQuizzApp());
@@ -18,7 +18,7 @@ class JabsQuizzApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF46178F)),
         useMaterial3: true,
       ),
-      home: const IngresoCodigoScreen(),
+      home: const SplashScreen(),
     );
   }
 }
