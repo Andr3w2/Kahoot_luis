@@ -16,6 +16,18 @@ namespace kahoot_proyect.Api.Controllers
             _context = context;
         }
 
+        // PUT: api/Cuestionarios/5/estado
+        [HttpPut("{id}/estado")]
+        public async Task<IActionResult> CambiarEstado(int id, [FromBody] string nuevoEstado)
+        {
+            var cuestionario = await _context.Cuestionarios.FindAsync(id);
+            if (cuestionario == null) return NotFound();
+
+            cuestionario.Estado = nuevoEstado;
+            await _context.SaveChangesAsync();
+            return Ok(cuestionario);
+        }
+
         // GET: api/Cuestionarios
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Cuestionario>>> GetCuestionarios()
@@ -39,16 +51,20 @@ namespace kahoot_proyect.Api.Controllers
             return cuestionario;
         }
 
-        // GET: api/Cuestionarios/codigo/ABC123 (Pantalla "Ingreso con código")
+        // GET: api/Cuestionarios/codigo/ABC123
         [HttpGet("codigo/{codigo}")]
         public async Task<ActionResult<Cuestionario>> GetCuestionarioPorCodigo(string codigo)
         {
+            string codigoLimpio = codigo.Trim().ToUpper();
+
             var cuestionario = await _context.Cuestionarios
-                .Include(c => c.Preguntas)
-                .FirstOrDefaultAsync(c => c.CodigoAcceso.ToUpper() == codigo.ToUpper() && c.Estado == "Activo");
+                .FirstOrDefaultAsync(c => c.CodigoAcceso.Trim().ToUpper() == codigoLimpio);
 
             if (cuestionario == null)
-                return NotFound(new { mensaje = "Código de sala inválido o el cuestionario no está activo." });
+                return NotFound(new { mensaje = "Código no encontrado." });
+
+            if (cuestionario.Estado != "Esperando")
+                return BadRequest(new { mensaje = "La sala está cerrada. Espera a que el maestro la abra." });
 
             return Ok(cuestionario);
         }

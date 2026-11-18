@@ -31,7 +31,7 @@ namespace kahoot_proyect.Api.Controllers
             return Ok(participacion);
         }
 
-        // GET: api/Participaciones/ranking/1 (Pantalla "Resultados finales")
+// GET: api/Participaciones/ranking/1
         [HttpGet("ranking/{idCuestionario}")]
         public async Task<ActionResult<IEnumerable<object>>> GetRankingPorCuestionario(int idCuestionario)
         {
@@ -40,8 +40,10 @@ namespace kahoot_proyect.Api.Controllers
                 .Include(p => p.Usuario)
                 .ToListAsync();
 
-            // Ordenar de mayor a menor convirtiendo PuntuacionTotal a número
+            // Agrupa por nombre de alumno (sin importar mayúsculas) y conserva solo la entrada más reciente
             var ranking = participaciones
+                .GroupBy(p => (p.Usuario != null ? p.Usuario.Nombre : "Alumno").Trim().ToLower())
+                .Select(g => g.OrderByDescending(x => x.IdParticipacion).First())
                 .Select(p => new
                 {
                     p.IdParticipacion,
@@ -72,6 +74,28 @@ namespace kahoot_proyect.Api.Controllers
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetParticipacion), new { id = participacion.IdParticipacion }, participacion);
+        }
+
+        // DELETE: api/Participaciones/cuestionario/1 (Limpia la sala y respuestas anteriores)
+        [HttpDelete("cuestionario/{idCuestionario}")]
+        public async Task<IActionResult> LimpiarSala(int idCuestionario)
+        {
+            var viejas = await _context.Participaciones
+                .Where(p => p.IdCuestionario == idCuestionario)
+                .ToListAsync();
+
+            if (viejas.Any())
+            {
+                var ids = viejas.Select(p => p.IdParticipacion).ToList();
+                var respuestasViejas = _context.Respuestas
+                    .Where(r => ids.Contains(r.IdParticipacion));
+
+                _context.Respuestas.RemoveRange(respuestasViejas);
+                _context.Participaciones.RemoveRange(viejas);
+                await _context.SaveChangesAsync();
+            }
+
+            return NoContent();
         }
 
         // PUT: api/Participaciones/5/finalizar (Marca el fin de la partida)

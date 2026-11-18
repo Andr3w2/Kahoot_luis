@@ -74,7 +74,8 @@ class _JuegoScreenState extends State<JuegoScreen> {
   void _iniciarTemporizador() {
     _timer?.cancel();
     final preguntaActual = _preguntas[_indiceActual];
-    _tiempoLimite = preguntaActual['tiempoLimite'] ?? 20;
+    _tiempoLimite =
+        int.tryParse(preguntaActual['tiempoLimite']?.toString() ?? '30') ?? 30;
     _segundosTranscurridos = 0;
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
@@ -114,8 +115,23 @@ class _JuegoScreenState extends State<JuegoScreen> {
 
       if (!mounted) return;
 
-      final bool esCorrecta = resultado?['esCorrecta'] ?? false;
-      final int puntos = resultado?['puntosObtenidos'] ?? 0;
+      if (resultado == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'La API rechazó la respuesta (revisa Models/Respuesta.cs).',
+            ),
+          ),
+        );
+        setState(() => _respondiendo = false);
+        return;
+      }
+
+      final String esCorrectaStr = (resultado['esCorrecta'] ?? 'false')
+          .toString()
+          .toLowerCase();
+      final bool esCorrecta = esCorrectaStr == 'true' || esCorrectaStr == '1';
+      final String puntos = (resultado['puntosObtenidos'] ?? '0').toString();
 
       await showDialog(
         context: context,
@@ -254,7 +270,7 @@ class _JuegoScreenState extends State<JuegoScreen> {
                 ],
               ),
               child: Text(
-                pregunta['textoPregunta'] ?? '',
+                pregunta['texto'] ?? pregunta['textoPregunta'] ?? '',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 22,
@@ -281,7 +297,7 @@ class _JuegoScreenState extends State<JuegoScreen> {
                           : () => _seleccionarOpcion(opcion),
                       icon: Icon(icono, size: 28, color: Colors.white),
                       label: Text(
-                        opcion['textoOpcion'] ?? '',
+                        opcion['texto'] ?? opcion['textoOpcion'] ?? '',
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,

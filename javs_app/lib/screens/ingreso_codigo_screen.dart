@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../services/api_service.dart';
-import 'juego_screen.dart';
+import 'sala_espera_screen.dart';
 
 class IngresoCodigoScreen extends StatefulWidget {
   final int idUsuario;
@@ -34,9 +34,19 @@ class _IngresoCodigoScreenState extends State<IngresoCodigoScreen> {
     try {
       final cuestionario = await ApiService.buscarCuestionarioPorCodigo(codigo);
 
+      // 1. MODIFICADO: Mensaje más claro cuando la API devuelve 404/400 (código inválido o sala cerrada)
       if (cuestionario == null) {
         _mostrarMensaje(
-          'Código no encontrado. Revisa las letras e intenta de nuevo.',
+          'La sala no existe o aún no ha sido abierta por el maestro.',
+        );
+        return;
+      }
+
+      // 2. AGREGADO: Validación explícita del estado de la sala antes de registrar al alumno
+      final String estado = (cuestionario['estado'] ?? '').toString();
+      if (estado != 'Esperando') {
+        _mostrarMensaje(
+          'La sala aún no está abierta. Espera a que el maestro la abra.',
         );
         return;
       }
@@ -59,10 +69,12 @@ class _IngresoCodigoScreenState extends State<IngresoCodigoScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (_) => JuegoScreen(
+          builder: (_) => SalaEsperaScreen(
             idCuestionario: idCuestionario,
-            idParticipacion: participacion['idParticipacion'],
             tituloSala: titulo,
+            codigoAcceso: codigo,
+            esMaestro: false,
+            idParticipacion: participacion['idParticipacion'],
           ),
         ),
       );

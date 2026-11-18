@@ -35,6 +35,19 @@ class _RankingScreenState extends State<RankingScreen> {
         elevation: 0,
         title: Text('Podio - ${widget.tituloSala}'),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Actualizar puntajes',
+            onPressed: () {
+              setState(() {
+                _rankingFuture = ApiService.obtenerRanking(
+                  widget.idCuestionario,
+                );
+              });
+            },
+          ),
+        ],
       ),
       body: FutureBuilder<List<dynamic>>(
         future: _rankingFuture,
@@ -80,10 +93,14 @@ class _RankingScreenState extends State<RankingScreen> {
                     itemBuilder: (context, index) {
                       final item = ranking[index];
                       final String nombre =
+                          item['nombreAlumno'] ??
                           item['usuario']?['nombre'] ??
-                          item['nombreUsuario'] ??
                           'Jugador #${item['idUsuario'] ?? index + 1}';
-                      final int puntaje = item['puntajeTotal'] ?? 0;
+                      final int puntaje =
+                          int.tryParse(
+                            item['puntuacionTotal']?.toString() ?? '0',
+                          ) ??
+                          0;
 
                       Color colorTarjeta = Colors.white;
                       IconData icono = Icons.person;
@@ -141,8 +158,15 @@ class _RankingScreenState extends State<RankingScreen> {
                   width: double.infinity,
                   height: 54,
                   child: ElevatedButton(
-                    onPressed: () =>
-                        Navigator.popUntil(context, (route) => route.isFirst),
+                    // MODIFICADO: Cierra la sala en SQLite antes de regresar al menú inicial
+                    onPressed: () async {
+                      await ApiService.cambiarEstadoCuestionario(
+                        widget.idCuestionario,
+                        'Cerrado',
+                      );
+                      if (!context.mounted) return;
+                      Navigator.popUntil(context, (route) => route.isFirst);
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF26890C),
                       foregroundColor: Colors.white,

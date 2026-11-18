@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io' show Platform;
-
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 
@@ -12,7 +11,6 @@ class ApiService {
     return 'http://127.0.0.1:5062/api';
   }
 
-  // Registrar usuario (Alumno o Maestro)
   static Future<Map<String, dynamic>?> registrarUsuario({
     required String nombre,
     required String correo,
@@ -34,7 +32,6 @@ class ApiService {
     return null;
   }
 
-  // Obtener lista de cuestionarios (para el panel del Maestro)
   static Future<List<dynamic>> obtenerCuestionarios() async {
     final response = await http.get(Uri.parse('$baseUrl/Cuestionarios'));
     if (response.statusCode == 200) {
@@ -43,7 +40,27 @@ class ApiService {
     return [];
   }
 
-  // Validar código de acceso de sala
+  static Future<Map<String, dynamic>?> obtenerCuestionarioPorId(int id) async {
+    final response = await http.get(Uri.parse('$baseUrl/Cuestionarios/$id'));
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body) as Map<String, dynamic>;
+    }
+    return null;
+  }
+
+  static Future<bool> cambiarEstadoCuestionario(int idCuestionario, String estado) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/Cuestionarios/$idCuestionario/estado'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode(estado),
+    );
+    return response.statusCode == 200;
+  }
+
+  static Future<void> limpiarSala(int idCuestionario) async {
+    await http.delete(Uri.parse('$baseUrl/Participaciones/cuestionario/$idCuestionario'));
+  }
+
   static Future<Map<String, dynamic>?> buscarCuestionarioPorCodigo(
     String codigo,
   ) async {
@@ -56,7 +73,6 @@ class ApiService {
     return null;
   }
 
-  // Registrar entrada del alumno a la partida
   static Future<Map<String, dynamic>?> iniciarParticipacion(
     int idUsuario,
     int idCuestionario,
@@ -75,7 +91,6 @@ class ApiService {
     return null;
   }
 
-  // Obtener preguntas con opciones de respuesta
   static Future<List<dynamic>> obtenerPreguntas(int idCuestionario) async {
     final response = await http.get(
       Uri.parse('$baseUrl/Preguntas/cuestionario/$idCuestionario'),
@@ -86,7 +101,6 @@ class ApiService {
     return [];
   }
 
-  // Enviar respuesta del alumno
   static Future<Map<String, dynamic>?> enviarRespuesta({
     required int idParticipacion,
     required int idPregunta,
@@ -109,7 +123,6 @@ class ApiService {
     return null;
   }
 
-  // Consultar ranking final
   static Future<List<dynamic>> obtenerRanking(int idCuestionario) async {
     final response = await http.get(
       Uri.parse('$baseUrl/Participaciones/ranking/$idCuestionario'),

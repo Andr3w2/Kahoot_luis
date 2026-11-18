@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../services/api_service.dart';
 import 'ranking_screen.dart';
+import 'sala_espera_screen.dart'; // 1. NUEVO IMPORT
 
 class PanelMaestroScreen extends StatefulWidget {
   final int idMaestro;
@@ -85,21 +86,46 @@ class _PanelMaestroScreenState extends State<PanelMaestroScreen> {
                         ),
                       ),
                       const SizedBox(height: 8),
+                      Chip(
+                        backgroundColor: Colors.amber.shade100,
+                        label: Text(
+                          'CÓDIGO: $codigo',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w900,
+                            fontSize: 16,
+                            letterSpacing: 2,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      // 2. NUEVA FILA DE BOTONES DE ACCIÓN PARA EL MAESTRO
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Chip(
-                            backgroundColor: Colors.amber.shade100,
-                            label: Text(
-                              'CÓDIGO: $codigo',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w900,
-                                fontSize: 16,
-                                letterSpacing: 2,
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (_) => SalaEsperaScreen(
+                                      idCuestionario: idCuestionario,
+                                      tituloSala: titulo,
+                                      codigoAcceso: codigo,
+                                      esMaestro: true,
+                                    ),
+                                  ),
+                                );
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF26890C),
+                                foregroundColor: Colors.white,
                               ),
+                              icon: const Icon(Icons.groups_rounded),
+                              label: const Text('Abrir Sala'),
                             ),
                           ),
-                          ElevatedButton.icon(
+                          const SizedBox(width: 10),
+                          OutlinedButton.icon(
                             onPressed: () {
                               Navigator.push(
                                 context,
@@ -112,7 +138,7 @@ class _PanelMaestroScreenState extends State<PanelMaestroScreen> {
                               );
                             },
                             icon: const Icon(Icons.emoji_events),
-                            label: const Text('Ver Podio'),
+                            label: const Text('Podio'),
                           ),
                         ],
                       ),

@@ -33,5 +33,8 @@ namespace kahoot_proyect.Api.Models
 
         [ForeignKey("IdPregunta")]
         public Pregunta? Pregunta { get; set; }
+
+        [ForeignKey("IdOpcion")]
+        public OpcionRespuesta? Opcion { get; set; }
     }
 }
