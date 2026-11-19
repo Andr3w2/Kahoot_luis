@@ -13,14 +13,26 @@ class SeleccionPerfilScreen extends StatefulWidget {
 
 class _SeleccionPerfilScreenState extends State<SeleccionPerfilScreen> {
   final TextEditingController _nombreController = TextEditingController();
-  String? _rolSeleccionado; // "Alumno" o "Maestro"
+  final TextEditingController _claveMaestroController =
+      TextEditingController(); // 1. NUEVO CONTROLADOR
+  String? _rolSeleccionado;
   bool _cargando = false;
 
   Future<void> _continuarConPerfil() async {
     final nombre = _nombreController.text.trim();
+    final claveDocente = _claveMaestroController.text.trim();
+
     if (nombre.isEmpty || _rolSeleccionado == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Escribe tu nombre para continuar')),
+      );
+      return;
+    }
+
+    // 2. VALIDACIÓN LOCAL PREVIA PARA MAESTROS
+    if (_rolSeleccionado == 'Maestro' && claveDocente.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Ingresa la clave de acceso docente')),
       );
       return;
     }
@@ -35,11 +47,23 @@ class _SeleccionPerfilScreenState extends State<SeleccionPerfilScreen> {
         nombre: nombre,
         correo: correoGenerado,
         rol: _rolSeleccionado!,
+        claveDocente: _rolSeleccionado == 'Maestro' ? claveDocente : null,
       );
 
       if (!mounted) return;
 
-      final int idUsuario = usuario?['idUsuario'] ?? 2;
+      // 3. SI LA API RECHAZA LA CLAVE (401), DETIENE EL ACCESO
+      if (usuario == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            backgroundColor: Color(0xFFE21B3C),
+            content: Text('Clave de maestro incorrecta. Acceso denegado.'),
+          ),
+        );
+        return;
+      }
+
+      final int idUsuario = usuario['idUsuario'] ?? 2;
 
       if (_rolSeleccionado == 'Alumno') {
         Navigator.push(
@@ -71,6 +95,7 @@ class _SeleccionPerfilScreenState extends State<SeleccionPerfilScreen> {
   @override
   void dispose() {
     _nombreController.dispose();
+    _claveMaestroController.dispose();
     super.dispose();
   }
 
@@ -157,6 +182,29 @@ class _SeleccionPerfilScreenState extends State<SeleccionPerfilScreen> {
                             ),
                           ),
                         ),
+                        // 4. CAMPO DE CLAVE QUE SOLO SE MUESTRA PARA MAESTROS
+                        if (_rolSeleccionado == 'Maestro') ...[
+                          const SizedBox(height: 14),
+                          TextField(
+                            controller: _claveMaestroController,
+                            obscureText: true,
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            decoration: InputDecoration(
+                              hintText: 'Clave de Maestro',
+                              prefixIcon: const Icon(Icons.lock_outline),
+                              filled: true,
+                              fillColor: Colors.grey.shade100,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(14),
+                                borderSide: BorderSide.none,
+                              ),
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 16),
                         SizedBox(
                           width: double.infinity,

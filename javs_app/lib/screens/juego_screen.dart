@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'ranking_screen.dart';
 
+/// Pantalla principal de juego donde el alumno visualiza cada pregunta,
+/// selecciona una opción antes de que se agote el tiempo límite y acumula puntaje.
 class JuegoScreen extends StatefulWidget {
   final int idCuestionario;
   final int idParticipacion;
@@ -22,20 +24,23 @@ class JuegoScreen extends StatefulWidget {
 }
 
 class _JuegoScreenState extends State<JuegoScreen> {
+  // Estado del cuestionario y control de navegación entre preguntas
   List<dynamic> _preguntas = [];
   int _indiceActual = 0;
   bool _cargando = true;
   bool _respondiendo = false;
 
+  // Variables para el temporizador de cuenta regresiva por pregunta
   Timer? _timer;
   int _segundosTranscurridos = 0;
   int _tiempoLimite = 20;
 
+  // Paleta de colores e íconos estilo Kahoot para los 4 botones de respuesta
   final List<Color> _coloresOpciones = const [
-    Color(0xFFE21B3C),
-    Color(0xFF1368CE),
-    Color(0xFFD89E00),
-    Color(0xFF26890C),
+    Color(0xFFE21B3C), // Rojo
+    Color(0xFF1368CE), // Azul
+    Color(0xFFD89E00), // Amarillo
+    Color(0xFF26890C), // Verde
   ];
 
   final List<IconData> _iconosOpciones = const [
@@ -51,6 +56,7 @@ class _JuegoScreenState extends State<JuegoScreen> {
     _cargarPreguntas();
   }
 
+  /// Obtiene desde la API todas las preguntas y opciones asociadas al cuestionario.
   Future<void> _cargarPreguntas() async {
     try {
       final datos = await ApiService.obtenerPreguntas(widget.idCuestionario);
@@ -71,6 +77,8 @@ class _JuegoScreenState extends State<JuegoScreen> {
     }
   }
 
+  /// Reinicia e inicia el reloj de cuenta regresiva según el tiempo límite
+  /// configurado en la pregunta actual. Si el tiempo llega a 0, avanza sola.
   void _iniciarTemporizador() {
     _timer?.cancel();
     final preguntaActual = _preguntas[_indiceActual];
@@ -89,6 +97,8 @@ class _JuegoScreenState extends State<JuegoScreen> {
     });
   }
 
+  /// Convierte los segundos transcurridos al formato HH:mm:ss esperado por
+  /// el tipo TimeSpan/String del backend en .NET.
   String _formatearTimeSpan(int segundos) {
     final horas = (segundos ~/ 3600).toString().padLeft(2, '0');
     final minutos = ((segundos % 3600) ~/ 60).toString().padLeft(2, '0');
@@ -96,6 +106,8 @@ class _JuegoScreenState extends State<JuegoScreen> {
     return '$horas:$minutos:$segs';
   }
 
+  /// Envía la opción seleccionada por el alumno a la API, recibe si fue correcta
+  /// y muestra retroalimentación visual antes de avanzar a la siguiente pregunta.
   Future<void> _seleccionarOpcion(Map<String, dynamic> opcion) async {
     if (_respondiendo) return;
     _timer?.cancel();
@@ -127,6 +139,7 @@ class _JuegoScreenState extends State<JuegoScreen> {
         return;
       }
 
+      // Conversión segura de los valores String devueltos por SQLite/.NET
       final String esCorrectaStr = (resultado['esCorrecta'] ?? 'false')
           .toString()
           .toLowerCase();
@@ -180,6 +193,8 @@ class _JuegoScreenState extends State<JuegoScreen> {
     }
   }
 
+  /// Avanza al siguiente índice de pregunta o redirige al podio final
+  /// cuando ya se respondieron todas.
   void _siguientePregunta() {
     if (!mounted) return;
     if (_indiceActual + 1 < _preguntas.length) {
@@ -201,8 +216,49 @@ class _JuegoScreenState extends State<JuegoScreen> {
     }
   }
 
+  /// Muestra un cuadro de diálogo de advertencia cuando el alumno intenta
+  /// regresar o salir de la pantalla en medio del cuestionario (anti-misclick).
+  Future<void> _confirmarSalida() async {
+    final salir = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange, size: 28),
+            SizedBox(width: 8),
+            Text('¿Salir de la partida?'),
+          ],
+        ),
+        content: const Text(
+          'Si sales ahora perderás tu avance en este cuestionario y no podrás volver a entrar.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Seguir jugando'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFE21B3C),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Salir'),
+          ),
+        ],
+      ),
+    );
+
+    if (salir == true && mounted) {
+      _timer?.cancel();
+      Navigator.pop(context);
+    }
+  }
+
   @override
   void dispose() {
+    // Libera el temporizador de memoria al destruir la pantalla
     _timer?.cancel();
     super.dispose();
   }
@@ -230,94 +286,108 @@ class _JuegoScreenState extends State<JuegoScreen> {
     final int segundosRestantes = (_tiempoLimite - _segundosTranscurridos)
         .clamp(0, _tiempoLimite);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF2F2F2),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF46178F),
-        foregroundColor: Colors.white,
-        title: Text('Pregunta ${_indiceActual + 1} de ${_preguntas.length}'),
-        centerTitle: true,
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            CircleAvatar(
-              radius: 28,
-              backgroundColor: const Color(0xFF46178F),
-              child: Text(
-                '$segundosRestantes',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(18),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 8,
-                    offset: Offset(0, 4),
+    // CORRECCIÓN APLICADA AQUÍ: Se envuelve el Scaffold principal en PopScope
+    // para interceptar el botón de regreso y ejecutar _confirmarSalida().
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          _confirmarSalida();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF2F2F2),
+        appBar: AppBar(
+          backgroundColor: const Color(0xFF46178F),
+          foregroundColor: Colors.white,
+          title: Text('Pregunta ${_indiceActual + 1} de ${_preguntas.length}'),
+          centerTitle: true,
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              // Indicador circular de segundos restantes
+              CircleAvatar(
+                radius: 28,
+                backgroundColor: const Color(0xFF46178F),
+                child: Text(
+                  '$segundosRestantes',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
                   ),
-                ],
-              ),
-              child: Text(
-                pregunta['texto'] ?? pregunta['textoPregunta'] ?? '',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.bold,
                 ),
               ),
-            ),
-            const SizedBox(height: 24),
-            Expanded(
-              child: ListView.separated(
-                itemCount: opciones.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 14),
-                itemBuilder: (context, index) {
-                  final opcion = opciones[index];
-                  final color =
-                      _coloresOpciones[index % _coloresOpciones.length];
-                  final icono = _iconosOpciones[index % _iconosOpciones.length];
-
-                  return SizedBox(
-                    height: 68,
-                    child: ElevatedButton.icon(
-                      onPressed: _respondiendo
-                          ? null
-                          : () => _seleccionarOpcion(opcion),
-                      icon: Icon(icono, size: 28, color: Colors.white),
-                      label: Text(
-                        opcion['texto'] ?? opcion['textoOpcion'] ?? '',
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: color,
-                        alignment: Alignment.centerLeft,
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                      ),
+              const SizedBox(height: 20),
+              // Tarjeta con el enunciado de la pregunta
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 8,
+                      offset: Offset(0, 4),
                     ),
-                  );
-                },
+                  ],
+                ),
+                child: Text(
+                  pregunta['texto'] ?? pregunta['textoPregunta'] ?? '',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
-            ),
-          ],
+              const SizedBox(height: 24),
+              // Lista de botones de opciones de respuesta
+              Expanded(
+                child: ListView.separated(
+                  itemCount: opciones.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 14),
+                  itemBuilder: (context, index) {
+                    final opcion = opciones[index];
+                    final color =
+                        _coloresOpciones[index % _coloresOpciones.length];
+                    final icono =
+                        _iconosOpciones[index % _iconosOpciones.length];
+
+                    return SizedBox(
+                      height: 68,
+                      child: ElevatedButton.icon(
+                        onPressed: _respondiendo
+                            ? null
+                            : () => _seleccionarOpcion(opcion),
+                        icon: Icon(icono, size: 28, color: Colors.white),
+                        label: Text(
+                          opcion['texto'] ?? opcion['textoOpcion'] ?? '',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: color,
+                          alignment: Alignment.centerLeft,
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

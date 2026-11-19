@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io' show Platform;
+
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:http/http.dart' as http;
 
@@ -15,15 +16,16 @@ class ApiService {
     required String nombre,
     required String correo,
     required String rol,
+    String? claveDocente,
   }) async {
     final response = await http.post(
-      Uri.parse('$baseUrl/Usuarios'),
+      Uri.parse('$baseUrl/Usuarios/acceso'),
       headers: {'Content-Type': 'application/json'},
       body: jsonEncode({
         'nombre': nombre,
         'correo': correo,
-        'contrasena': '123',
         'rol': rol,
+        'claveDocente': claveDocente,
       }),
     );
     if (response.statusCode == 201 || response.statusCode == 200) {
@@ -48,7 +50,10 @@ class ApiService {
     return null;
   }
 
-  static Future<bool> cambiarEstadoCuestionario(int idCuestionario, String estado) async {
+  static Future<bool> cambiarEstadoCuestionario(
+    int idCuestionario,
+    String estado,
+  ) async {
     final response = await http.put(
       Uri.parse('$baseUrl/Cuestionarios/$idCuestionario/estado'),
       headers: {'Content-Type': 'application/json'},
@@ -58,7 +63,9 @@ class ApiService {
   }
 
   static Future<void> limpiarSala(int idCuestionario) async {
-    await http.delete(Uri.parse('$baseUrl/Participaciones/cuestionario/$idCuestionario'));
+    await http.delete(
+      Uri.parse('$baseUrl/Participaciones/cuestionario/$idCuestionario'),
+    );
   }
 
   static Future<Map<String, dynamic>?> buscarCuestionarioPorCodigo(

@@ -16,6 +16,34 @@ namespace kahoot_proyect.Api.Controllers
             _context = context;
         }
 
+    // POST: api/Usuarios/acceso
+    [HttpPost("acceso")]
+    public async Task<ActionResult<Usuario>> AccesoPerfil([FromBody] RegistroPerfilDto datos)
+    {
+        const string CLAVE_MAESTRO_VALIDA = "DOCENTE2026";
+
+        if (datos.Rol == "Maestro")
+        {
+            if (string.IsNullOrWhiteSpace(datos.ClaveDocente) ||
+                datos.ClaveDocente.Trim() != CLAVE_MAESTRO_VALIDA)
+            {
+                return Unauthorized(new { mensaje = "Clave de maestro incorrecta." });
+            }
+        }
+
+        var usuario = new Usuario
+        {
+            Nombre = datos.Nombre.Trim(),
+            Correo = datos.Correo,
+            Contrasena = datos.Rol == "Maestro" ? CLAVE_MAESTRO_VALIDA : "123"
+        };
+
+        _context.Usuarios.Add(usuario);
+        await _context.SaveChangesAsync();
+
+        return Ok(usuario);
+    }
+        
         // GET: api/Usuarios
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Usuario>>> GetUsuarios()
@@ -57,6 +85,15 @@ namespace kahoot_proyect.Api.Controllers
 
             return Ok(usuario);
         }
+    }
+
+    // Agrega esta propiedad auxiliar dentro o fuera del namespace de UsuariosController.cs
+    public class RegistroPerfilDto
+    {
+        public string Nombre { get; set; } = string.Empty;
+        public string Correo { get; set; } = string.Empty;
+        public string Rol { get; set; } = "Alumno";
+        public string? ClaveDocente { get; set; }
     }
 
     public class LoginRequest
