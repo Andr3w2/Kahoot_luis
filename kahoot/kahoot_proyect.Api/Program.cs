@@ -1,16 +1,25 @@
-using Microsoft.EntityFrameworkCore;
+using System.Text;
 using kahoot_proyect.Api.Data;
+using kahoot_proyect.Api.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// 1. Registrar SQLite con AppDbContext
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
+// 1. Controladores
+builder.Services.AddControllers();
 
-// 2. Habilitar CORS para que la app de Flutter pueda conectarse
+// 2. Base de datos SQLite
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "Data Source=kahoot.db";
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlite(connectionString));
+
+// 3. CORS (permite conexiones desde Flutter en Android, Windows o Web)
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFlutter", policy =>
+    options.AddPolicy("AllowAll", policy =>
     {
         policy.AllowAnyOrigin()
               .AllowAnyMethod()
@@ -18,28 +27,51 @@ builder.Services.AddCors(options =>
     });
 });
 
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
+// 4. Autenticación con JWT
+var jwtKey = builder.Configuration["Jwt:Key"] ?? "ClaveSuperSecretaDeAlMenos32CaracteresParaJabsQuizz!";
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
     {
-        options.JsonSerializerOptions.ReferenceHandler =
-            System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = false,
+            ValidateAudience = false,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+        };
     });
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+
+builder.Services.AddAuthorization();
 
 var app = builder.Build();
 
-// 3. Activar interfaz visual de Swagger en desarrollo
-if (app.Environment.IsDevelopment())
+// 5. Crea automáticamente la cuenta del Administrador inicial si no existe
+using (var scope = app.Services.CreateScope())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    context.Database.Migrate();
+
+    if (!context.Usuarios.Any(u => u.TipoUsuario == "Admin"))
+    {
+        var hasher = new PasswordHasher<Usuario>();
+        var admin = new Usuario
+        {
+            Nombre = "Administrador",
+            Correo = "admin@jabsquizz.com",
+            TipoUsuario = "Admin",
+            Activo = true
+        };
+        admin.Contrasena = hasher.HashPassword(admin, "Admin1234!");
+        context.Usuarios.Add(admin);
+        context.SaveChanges();
+    }
 }
 
-app.UseCors("AllowFlutter");
-
-// app.UseHttpsRedirection();
-
+// 6. Pipeline HTTP (el orden es importante)
+app.UseCors("AllowAll");
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
-import 'screens/splash_screen.dart';
+import 'screens/seleccion_perfil_screen.dart';
+import 'screens/auth/login_staff_screen.dart';
+import 'screens/auth/registro_maestro_screen.dart';
+import 'screens/admin/admin_home_screen.dart';
 
 void main() {
   runApp(const JabsQuizzApp());
@@ -18,7 +21,13 @@ class JabsQuizzApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF46178F)),
         useMaterial3: true,
       ),
-      home: const SplashScreen(),
+      initialRoute: '/',
+      routes: {
+        '/': (context) => const SeleccionPerfilScreen(),
+        '/auth/login': (context) => const LoginStaffScreen(),
+        '/auth/registro-maestro': (context) => const RegistroMaestroScreen(),
+        '/admin/home': (context) => const AdminHomeScreen(),
+      },
     );
   }
 }

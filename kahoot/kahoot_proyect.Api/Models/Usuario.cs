@@ -20,7 +20,10 @@ namespace kahoot_proyect.Api.Models
         public string Contrasena { get; set; } = string.Empty;
 
         [Column("tipo_usuario")]
-        public string TipoUsuario { get; set; } = string.Empty;
+        public string TipoUsuario { get; set; } = string.Empty; // "Admin", "Maestro" o "Alumno"
+
+        [Column("activo")]
+        public bool Activo { get; set; } = true;
 
         public ICollection<Cuestionario> Cuestionarios { get; set; } = new List<Cuestionario>();
         public ICollection<Participacion> Participaciones { get; set; } = new List<Participacion>();

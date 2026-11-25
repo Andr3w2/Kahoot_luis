@@ -13,5 +13,6 @@ namespace kahoot_proyect.Api.Data
         public DbSet<OpcionRespuesta> OpcionesRespuestas { get; set; }
         public DbSet<Participacion> Participaciones { get; set; }
         public DbSet<Respuesta> Respuestas { get; set; }
+        public DbSet<CodigoInvitacion> CodigosInvitacion { get; set; }
     }
 }
