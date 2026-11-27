@@ -44,6 +44,9 @@ public class AnalyticsController : ControllerBase
                 double tiempoProm = respGrupo.Count > 0
                     ? Math.Round(respGrupo.Average(x => x.TiempoSegundos), 1)
                     : 0;
+                double medianaTiempo = Math.Round(
+                    CalcularMediana(respGrupo.Select(x => x.TiempoSegundos)), 1
+                );
 
                 return new
                 {
@@ -52,7 +55,8 @@ public class AnalyticsController : ControllerBase
                     correctas,
                     incorrectas,
                     totalRespuestas = correctas + incorrectas,
-                    tiempoPromedio = tiempoProm
+                    tiempoPromedio = tiempoProm,
+                    medianaTiempo
                 };
             })
             .OrderByDescending(x => x.totalRespuestas)
@@ -117,7 +121,6 @@ public class AnalyticsController : ControllerBase
             };
         }
 
-        // Vista 4D: 4ª Dimensión = DIM_USUARIO dividida en 3 grupos de alumnos
         var cubos4d = new[]
         {
             new { etiquetaGrupo = "Alumnos U001–U027 (Grupo A)", datosCubo = ConstruirMatrizCubo(1, 27) },
@@ -141,12 +144,23 @@ public class AnalyticsController : ControllerBase
                 porcentajeAcierto = totResp > 0 ? Math.Round((double)totCorrectas * 100 / totResp, 1) : 0,
                 tiempoPromedioGlobal = respuestasFiltradas.Count > 0
                     ? Math.Round(respuestasFiltradas.Average(x => x.TiempoSegundos), 2)
-                    : 0
+                    : 0,
+                medianaTiempoGlobal = CalcularMediana(respuestasFiltradas.Select(x => x.TiempoSegundos))
             },
             cubo3d = ConstruirMatrizCubo(1, 80),
             cubo4d = cubos4d,
             datos = grupos
         });
+    }
+
+    // Medida Holística: Mediana del tiempo de respuesta
+    private static double CalcularMediana(IEnumerable<double> valores)
+    {
+        var ordenados = valores.OrderBy(x => x).ToList();
+        int n = ordenados.Count;
+        if (n == 0) return 0;
+        if (n % 2 == 1) return Math.Round(ordenados[n / 2], 2);
+        return Math.Round((ordenados[(n / 2) - 1] + ordenados[n / 2]) / 2.0, 2);
     }
 
     private static int ExtraerNumeroUsuario(string idUsuario)

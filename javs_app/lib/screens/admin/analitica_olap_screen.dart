@@ -229,7 +229,6 @@ class _AnaliticaOlapScreenState extends State<AnaliticaOlapScreen> {
                             else
                               Column(
                                 children: [
-                                  // Botones de navegación rápida para los cubos 4D
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
@@ -373,7 +372,7 @@ class _AnaliticaOlapScreenState extends State<AnaliticaOlapScreen> {
                   ),
                   const SizedBox(height: 16),
 
-                  // TARJETAS KPI
+                  // TARJETAS KPI (Distributivas, Algebraicas y Holística)
                   if (resumen != null)
                     Row(
                       children: [
@@ -399,6 +398,12 @@ class _AnaliticaOlapScreenState extends State<AnaliticaOlapScreen> {
                           titulo: 'Tiempo Prom.',
                           valor: '${resumen['tiempoPromedioGlobal']}s',
                           color: const Color(0xFFE21B3C),
+                        ),
+                        const SizedBox(width: 8),
+                        _KpiCard(
+                          titulo: 'Mediana Tiempo',
+                          valor: '${resumen['medianaTiempoGlobal']}s',
+                          color: const Color(0xFF46178F),
                         ),
                       ],
                     ),
@@ -432,6 +437,7 @@ class _AnaliticaOlapScreenState extends State<AnaliticaOlapScreen> {
                     final corr = (item['correctas'] as num).toInt();
                     final inc = (item['incorrectas'] as num).toInt();
                     final tProm = item['tiempoPromedio'];
+                    final tMed = item['medianaTiempo'];
 
                     return Card(
                       margin: const EdgeInsets.only(bottom: 12),
@@ -453,7 +459,7 @@ class _AnaliticaOlapScreenState extends State<AnaliticaOlapScreen> {
                                   ),
                                 ),
                                 Text(
-                                  '⏱ ${tProm}s prom.',
+                                  '⏱ Prom: ${tProm}s • Mediana: ${tMed}s',
                                   style: TextStyle(
                                     color: Colors.grey.shade700,
                                     fontWeight: FontWeight.w600,
@@ -731,7 +737,7 @@ class _CuboOlapPainter extends CustomPainter {
       _drawText(
         canvas,
         capasLabels[d],
-        Offset(x0 + d * dx - (compacto ? 28 : 28), y0 - d * dy - dy / 2),
+        Offset(x0 + d * dx - 28, y0 - d * dy - dy / 2),
         fontSize: compacto ? 9.5 : 11,
         bold: true,
         color: const Color(0xFF1368CE),
