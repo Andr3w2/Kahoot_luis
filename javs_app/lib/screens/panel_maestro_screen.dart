@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../services/api_service.dart';
+import '../services/auth_service.dart';
+import 'admin/analitica_olap_screen.dart';
 import 'ranking_screen.dart';
-import 'sala_espera_screen.dart'; // 1. NUEVO IMPORT
+import 'sala_espera_screen.dart';
 
 class PanelMaestroScreen extends StatefulWidget {
   final int idMaestro;
@@ -37,11 +39,34 @@ class _PanelMaestroScreenState extends State<PanelMaestroScreen> {
         title: Text('Hola, ${widget.nombreMaestro}'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.bar_chart_rounded),
+            tooltip: 'Estadísticas de Desempeño',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) =>
+                      const AnaliticaOlapScreen(mostrarCubo3d: false),
+                ),
+              );
+            },
+          ),
+          IconButton(
             icon: const Icon(Icons.refresh),
+            tooltip: 'Actualizar',
             onPressed: () {
               setState(() {
                 _cuestionariosFuture = ApiService.obtenerCuestionarios();
               });
+            },
+          ),
+          IconButton(
+            icon: const Icon(Icons.logout),
+            tooltip: 'Cerrar sesión',
+            onPressed: () async {
+              await AuthService.cerrarSesion();
+              if (!context.mounted) return;
+              Navigator.pushNamedAndRemoveUntil(context, '/', (route) => false);
             },
           ),
         ],
@@ -98,7 +123,6 @@ class _PanelMaestroScreenState extends State<PanelMaestroScreen> {
                         ),
                       ),
                       const SizedBox(height: 12),
-                      // 2. NUEVA FILA DE BOTONES DE ACCIÓN PARA EL MAESTRO
                       Row(
                         children: [
                           Expanded(

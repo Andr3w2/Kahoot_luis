@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import '../../services/auth_service.dart';
+import 'analitica_olap_screen.dart';
 
 class AdminHomeScreen extends StatefulWidget {
   const AdminHomeScreen({super.key});
@@ -69,6 +70,16 @@ class _AdminHomeScreenState extends State<AdminHomeScreen> {
         appBar: AppBar(
           title: const Text('Panel de Administrador'),
           actions: [
+            IconButton(
+              icon: const Icon(Icons.bar_chart_rounded),
+              tooltip: 'Ver Cubo OLAP y Gráficas',
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => AnaliticaOlapScreen()),
+                );
+              },
+            ),
             IconButton(
               icon: const Icon(Icons.logout),
               tooltip: 'Cerrar sesión',
